@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+  <title>Document</title>
+</head>
+<body class="container">
+  <div class="d-flex justify-content-around">
+    <div class="d-flex justify-content-start">
+      <h1 id="myName" class="m-2"></h1>
+      <button id="editBtn" type="button" class="btn btn-primary m-2" data-toggle="modal" data-target="#EDIT">
+        EDIT
+      </button>
+    </div>
+    <form id="form" class="text-center m-3">
+      <input type="text" name="meal" class="px-5" id="search">
+      <button>Send</button>
+    </form>
+    <button id="followBtn" type="button" class="btn btn-primary m-2" data-toggle="modal" data-target="#Follow">
+      Follow user
+    </button>
+  </div>
+  
+  <div class="content-holder">
+
+  </div>
+
+  <div class="modal fade" id="Follow" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalCenterTitle">Modal title</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="form-follow" class="text-center m-3">
+            <label>E-mail</label>
+            <input type="text" name="meal" class="px-5" id="followInp">
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="AddBtn">Add</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="EDIT" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalCenterTitle">Modal title</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="edit-content">
+            <form id="form-edit" class="text-center m-3">
+              <label>First Name</label>
+              <input type="text" name="meal" class="px-5" id="FirstNameInput">
+              <label>Last Name</label>
+              <input type="text" name="meal" class="px-5" id="LastNameInput">
+            </form>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="saveChangesBtn">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div> 
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+  <script>
+    var baseUrl = "http://146.185.154.90:8000/blog/bek@kas.com/";
+
+    var getStarted = function(){
+      var url = baseUrl + "profile";
+      return $.get(url);
+    }
+
+    var sendNewPost = function(message){
+      var url = baseUrl + "posts";
+      return $.post(url, message);
+    }
+    var getMessageFromUI = function(){
+      var text = $('#search').val();
+      var message = {
+        message: text
+      }
+      return message;
+    };
+
+    var showPost = function(message){
+      var post = $('<div class="m-2 border border-dark">');
+      var author = $('<h5 class="m-2"></h5>').text(message.user.firstName + " " + message.user.lastName);
+      var msgText = $('<h3 class="m-2"></h3>').text(message.message);
+      post.append(author, msgText);
+      $('.content-holder').prepend(post);
+    }
+
+    var getPosts = function(){
+      var url = baseUrl + "posts";
+      return $.get(url);
+    };
+    var subscribe = function(Email){
+      var url = baseUrl + "subscribe";
+      return $.post(url, {email: Email});
+    };
+
+    getPosts().then(function(messages){
+      for(var message of messages){
+        showPost(message);
+      }
+    });
+
+    getStarted().then(function(data){
+      var me = data.firstName + " " + data.lastName;
+      $("#myName").text(me);
+    });
+
+    $("#saveChangesBtn").on("click", function(){
+      var FirstName = $("#FirstNameInput").val();
+      var SecondName = $("#LastNameInput").val();
+      var url = baseUrl + "profile";
+      $.post(url, {firstName: FirstName, lastName: SecondName});
+      getPosts()
+      .then(function(messages){
+        for(var message of messages){
+          showPost(message);
+        }
+      });
+      getStarted().then(function(data){
+        var me = data.firstName + " " + data.lastName;
+        $("#myName").text(me);
+      });
+    });
+
+    $("#AddBtn").on("click", function(){
+      var email = $("#followInp").val();
+      subscribe(email);
+    });
+
+    
+    $("#form").on("submit", function(e){
+      e.preventDefault();
+      var message = getMessageFromUI();
+      sendNewPost(message)
+      .then(function(){
+        var url = baseUrl + "posts";
+        return $.get(url);
+      })
+      .then(function(messages){
+        for(var message of messages){
+          showPost(message);
+        }
+      })
+      $('#search').val("");
+    }); 
+  </script>
+</body>
+</html>
